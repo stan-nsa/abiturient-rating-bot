@@ -4,8 +4,7 @@ from aiogram.enums import ChatAction
 
 from university import guap_get_data
 import config
-from keyboards import get_kb_university, ParseType, ParseCbData
-
+from keyboards import UniversityCbData, SpecialityCbData, ParseCbData, get_kb_speciality, get_kb_university
 
 router = Router(name=__name__)
 # Роутер только для лички (фильтры уже прописаны в /handlers/__init__.py)
@@ -15,11 +14,9 @@ router = Router(name=__name__)
 
 # == Обработчик команды university ====================================================================
 @router.callback_query(
-    ParseCbData.filter(
-        F.type == ParseType.university
-    )
+    UniversityCbData.filter()
 )
-async def handler_university(callback: types.CallbackQuery, callback_data: ParseCbData):
+async def handler_university(callback: types.CallbackQuery, callback_data: UniversityCbData):
     university_id = callback_data.id
     university = config.univers.get(university_id)
     text = university.name
@@ -33,17 +30,37 @@ async def handler_university(callback: types.CallbackQuery, callback_data: Parse
 
 # == Обработчик команды speciality ====================================================================
 @router.callback_query(
-    ParseCbData.filter(
-        F.type == ParseType.speciality
-    )
+    SpecialityCbData.filter()
 )
-async def handler_university(callback: types.CallbackQuery, callback_data: ParseCbData):
+async def handler_speciality(callback: types.CallbackQuery, callback_data: SpecialityCbData):
     speciality_id = callback_data.id
-    speciality = config.univers.get(university_id)
-    text = university.name
+    university_id = callback_data.university_id
+    university = config.univers.get(university_id)
+    speciality = university.specialties.get(speciality_id)
+    text = f"{university.name}:\n"\
+            f"{speciality.name}"
     await callback.message.edit_text(
         text=text,
-        reply_markup=get_kb_university(university=university).as_markup()
+        reply_markup=get_kb_speciality(speciality=speciality, university=university).as_markup()
+    )
+    await callback.answer()
+# =================================================================================================
+
+
+# == Обработчик команды parse ====================================================================
+@router.callback_query(
+    ParseCbData.filter()
+)
+async def handler_parse(callback: types.CallbackQuery, callback_data: ParseCbData):
+    speciality_id = callback_data.id
+    university_id = callback_data.university_id
+    university = config.univers.get(university_id)
+    speciality = university.specialties.get(speciality_id)
+    text = f"Получение CSV-файла для:\n"\
+            f"{speciality.name}"
+    await callback.message.edit_text(
+        text=text,
+        # reply_markup=get_kb_speciality(speciality=speciality).as_markup()
     )
     await callback.answer()
 # =================================================================================================

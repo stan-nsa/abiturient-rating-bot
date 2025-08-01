@@ -4,17 +4,20 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters.callback_data import CallbackData
 
-from university import University
+from university import University, Speciality
 
 
-class ParseType(Enum):
-    university = 'university'
-    speciality = 'speciality'
-
-
-class ParseCbData(CallbackData, prefix='parse'):
-    type: ParseType
+class UniversityCbData(CallbackData, prefix='university'):
     id: str
+
+
+class SpecialityCbData(CallbackData, prefix='speciality'):
+    id: str
+    university_id: str
+
+
+class ParseCbData(SpecialityCbData, prefix='parse'):
+    pass
 
 
 # Клавиатура для команды parse
@@ -22,7 +25,7 @@ def get_kb_parse(univers: dict[University]):
     kb = [
         InlineKeyboardButton(
             text=univer.name,
-            callback_data=ParseCbData(type=ParseType.university, id=univer.id).pack()
+            callback_data=UniversityCbData(id=univer.id).pack()
         )
         for univer in univers.values()
     ]
@@ -34,12 +37,22 @@ def get_kb_university(university: University):
     kb = [
         InlineKeyboardButton(
             text=speciality.name,
-            callback_data=ParseCbData(type=ParseType.speciality, id=speciality.id).pack()
+            callback_data=SpecialityCbData(id=speciality.id, university_id=university.id).pack()
         )
         for speciality in university.specialties.values()
     ]
     return InlineKeyboardBuilder().add(*kb).adjust(1)
 
+
+# Клавиатура для команды speciality
+def get_kb_speciality(speciality: Speciality, university: University):
+    kb = [
+        InlineKeyboardButton(
+            text="CSV-файл рейтинга абитуриентов",
+            callback_data=ParseCbData(id=speciality.id, university_id=university.id).pack()
+        ),
+    ]
+    return InlineKeyboardBuilder().add(*kb).adjust(1)
 
 
 # # Клавиатура для команды score
