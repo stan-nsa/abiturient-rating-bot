@@ -51,7 +51,7 @@ config = Config(
     ),
 )
 
-univers = {
+universities = {
     'guap':
         University(
             id='guap',

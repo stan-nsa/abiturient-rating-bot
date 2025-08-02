@@ -1,10 +1,10 @@
 from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
-from aiogram.enums import ParseMode, ChatAction
+from aiogram.enums import ChatAction
 
 from help import help_text
 import config
-from keyboards import get_kb_parse
+from keyboards import get_kb_parse, get_kb_back
 from university import guap_get_data
 
 
@@ -24,41 +24,16 @@ async def handler_command_start(message: types.Message):
 
 
 # == Обработчик команды /parse ====================================================================
-@router.message(Command(commands='parse2', ignore_case=True))
-async def handler_command_parse(message: types.Message):
-    await message.delete()
-
-    await message.answer(
-        text='Университеты:',
-        reply_markup=get_kb_parse(univers=config.univers).as_markup()
-    )
-
-# =================================================================================================
-
-
-# == Обработчик команды /parse ====================================================================
 @router.message(Command(commands='parse', ignore_case=True))
 async def handler_command_parse(message: types.Message):
     await message.delete()
 
-    for spec in config.univers['guap'].specialties.values():
-        await message.bot.send_chat_action(
-            chat_id=message.chat.id,
-            action=ChatAction.UPLOAD_DOCUMENT
-        )
-
-        file_path = guap_get_data(
-            speciality=spec,
-            rank_minimum=config.config.rank.points_minimum
-        )
-
-        await message.answer_document(
-            document=types.FSInputFile(path=file_path),
-            caption=spec.name
-        )
+    kb = get_kb_parse(universities=config.universities)
+    kb.attach(get_kb_back(callback_data="Back"))
 
     await message.answer(
-        text='CSV-файлы выгружены!'
+        text="Университеты:",
+        reply_markup=kb.as_markup()
     )
 
 # =================================================================================================

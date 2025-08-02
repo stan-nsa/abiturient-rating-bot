@@ -21,63 +21,44 @@ class ParseCbData(SpecialityCbData, prefix='parse'):
 
 
 # Клавиатура для команды parse
-def get_kb_parse(univers: dict[University]):
-    kb = [
-        InlineKeyboardButton(
-            text=univer.name,
-            callback_data=UniversityCbData(id=univer.id).pack()
+def get_kb_parse(universities: dict[University]):
+    kb = InlineKeyboardBuilder()
+    for university in universities.values():
+        kb.button(
+            text=university.name,
+            callback_data=UniversityCbData(id=university.id).pack()
         )
-        for univer in univers.values()
-    ]
-    return InlineKeyboardBuilder().add(*kb).adjust(1)
+    return kb.adjust(1)
 
 
 # Клавиатура для команды university
 def get_kb_university(university: University):
-    kb = [
-        InlineKeyboardButton(
+    kb = InlineKeyboardBuilder()
+    for speciality in university.specialties.values():
+        kb.button(
             text=speciality.name,
-            callback_data=SpecialityCbData(id=speciality.id, university_id=university.id).pack()
+            callback_data=SpecialityCbData(id=speciality.id, university_id=university.id)
         )
-        for speciality in university.specialties.values()
-    ]
-    return InlineKeyboardBuilder().add(*kb).adjust(1)
+    kb.button(
+        text="Выгрузить все CSV-файлы",
+        callback_data=ParseCbData(id="_ALL_", university_id=university.id)
+    )
+    return kb.adjust(1)
 
 
 # Клавиатура для команды speciality
 def get_kb_speciality(speciality: Speciality, university: University):
-    kb = [
-        InlineKeyboardButton(
-            text="CSV-файл рейтинга абитуриентов",
-            callback_data=ParseCbData(id=speciality.id, university_id=university.id).pack()
-        ),
-    ]
-    return InlineKeyboardBuilder().add(*kb).adjust(1)
+    kb = InlineKeyboardBuilder()
+    kb.button(
+        text="CSV-файл рейтинга абитуриентов",
+        callback_data=ParseCbData(id=speciality.id, university_id=university.id)
+    )
+    return kb.adjust(1)
 
 
-# # Клавиатура для команды score
-# def get_kb_score(schedule: Schedule):
-#     return InlineKeyboardBuilder().add(
-#         InlineKeyboardButton(
-#             text=f"{ico['info']}Details",
-#             callback_data=ScheduleCbData(type=ScheduleType.details, date=schedule.date).pack()
-#         ),
-#     )
-#
-#
-# # Клавиатура для команды schedule
-# def get_kb_schedule(schedule: Schedule):
-#     return InlineKeyboardBuilder().add(
-#         InlineKeyboardButton(
-#             text=f"{ico['info']}Details",
-#             callback_data=ScheduleCbData(type=ScheduleType.details, date=schedule.current_date).pack()
-#         ),
-#         InlineKeyboardButton(
-#             text=f"{schedule.prev_date}{ico['prev']}",
-#             callback_data=ScheduleCbData(type=ScheduleType.schedule, date=schedule.prev_date).pack()
-#         ),
-#         InlineKeyboardButton(
-#             text=f"{ico['next']}{schedule.next_date}",
-#             callback_data=ScheduleCbData(type=ScheduleType.schedule, date=schedule.next_date).pack()
-#         ),
-#     ).adjust(1,2)
+# Клавиатура/кнопка Back
+def get_kb_back(callback_data):
+    return InlineKeyboardBuilder().button(
+            text="🔙 Назад",
+            callback_data=callback_data
+    ).adjust(1)
